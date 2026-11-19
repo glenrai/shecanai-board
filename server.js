@@ -20,6 +20,11 @@ let state = {
     { id: 'q4', question: 'Who in your company signs off before a tool touches real data?', locked: false, seq: 1, posts: [], deleted: [] },
   ],
 };
+// Optional: seed questions from env, e.g. BOARD_QUESTIONS='["Q1","Q2"]'
+try {
+  const qs = JSON.parse(process.env.BOARD_QUESTIONS || 'null');
+  if (Array.isArray(qs) && qs.length) state.boards = qs.map((q, i) => ({ id: 'q' + (i + 1), question: String(q), locked: false, seq: 1, posts: [], deleted: [] }));
+} catch (e) { console.log('BOARD_QUESTIONS is not valid JSON'); }
 try { state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); console.log('Loaded', DATA_FILE); } catch (e) {}
 
 let saveTimer = null;
@@ -61,7 +66,8 @@ function readBody(req) {
 const publicPost = (p) => ({ id: p.id, name: p.name, color: p.color, text: p.text, ts: p.ts, owner: p.owner });
 const isHost = (body, url) => (body && body.hostKey === HOST_KEY) || (url && url.searchParams.get('host') === HOST_KEY);
 
-const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+const BOARD_TITLE = process.env.BOARD_TITLE || 'SheCanAI';
+const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8').split('SheCanAI · Response board').join(BOARD_TITLE.replace(/[<>&"]/g, '') + ' · Response board');
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
